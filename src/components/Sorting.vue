@@ -8,6 +8,7 @@
       <button v-on:click="startMergeSort(arr)">Merge Sort</button>
       <button v-on:click="heap(arr)">Heap Sort</button>
       <button v-on:click="startQuickSort(arr)">Quick Sort</button>
+      <button v-on:click="startInsertionSort(arr)">Insertion Sort</button>
     </div>
     <div class="content">
       <div
@@ -15,7 +16,7 @@
         v-for="(item, index) in arr"
         :key="index"
         :style="{
-          height: (item / maxNum) * 95 + '%'
+          height: (item / maxNum) * 95 + '%',
         }"
       ></div>
     </div>
@@ -36,17 +37,17 @@ const PIVOT_COLOR = "#9400ff";
 
 export default {
   name: "Sorting",
-  beforeMount: function() {
+  beforeMount: function () {
     this.generateRandomArray(300, 5, 1000);
   },
   mounted: function () {
-    this.coloringAllBar()
+    this.coloringAllBar();
   },
   data: function () {
     return {
       arr: [],
       maxNum: 0,
-      baseColor: BASE_COLOR
+      baseColor: BASE_COLOR,
     };
   },
   methods: {
@@ -79,8 +80,7 @@ export default {
         len--;
       }
 
-      for (let i = 0; i < this.arr.length; i++)
-        animations.push([i, this.arr[i], true, PRIMARY_COLOR]);
+      this.coloringSortedArray(animations)
 
       this.animationSorting(animations);
     },
@@ -196,7 +196,7 @@ export default {
       while (i >= 0) {
         animations.push([i, 0, false, CHECKING_COLOR]);
         animations.push([i, 0, false, BASE_COLOR]);
-        
+
         const color = this.getColorInRange(i);
 
         animations.push([i, arr[0], true, color]);
@@ -206,16 +206,7 @@ export default {
         i--;
       }
 
-      for (i = 0; i < arr.length; i++) {
-        animations.push([i, arr[i], true, CHECKING_COLOR]);
-        if (i > 0) animations.push([i - 1, arr[i - 1], true, CLEARANCE_COLOR]);
-
-        if (i == arr.length - 1)
-          animations.push([i, arr[i], true, CLEARANCE_COLOR]);
-      }
-
-      for (i = 0; i < arr.length; i++)
-        animations.push([i, arr[i], true, PRIMARY_COLOR]);
+      this.coloringSortedArray(animations)
     },
 
     /**
@@ -343,10 +334,50 @@ export default {
     },
     /**************** END QUICK SORT SECTION ***************/
 
+    /**************** START INSERTION SORT SECTION ***************/
+    startInsertionSort: function(arr) {
+      const animations = []
+      this.insertionSort(arr, animations)
+      this.animationSorting(animations)
+    },
+
+    /**
+     * Main function Insertion Sorting Algorithm
+     * @param arr|Array
+     * @param animations|Array
+     */
+    insertionSort: function(arr, animations) {
+      for(let i = 1; i < arr.length; i++)
+      {
+        let index = i;
+        const temp = arr[index]
+        let j = index - 1
+        while(temp < arr[j])
+        {
+          animations.push([index, j, false, CHECKING_COLOR])
+          arr[j + 1] = arr[j]
+          animations.push([j + 1, arr[j], true, (j + 1 == i) ? PIVOT_COLOR : this.getColorInRange(j + 1)])
+          animations.push([index, j, false, this.getColorInRange(j)])
+          index--
+          j--
+
+          if(j < 0) {
+            break
+          }
+        }
+
+        animations.push([j + 1, temp, true, this.getColorInRange(j + 1)])
+        arr[j + 1] = temp
+      }
+
+      this.coloringSortedArray(animations)
+    },
+    /**************** END INSERTION SORT SECTION ***************/
+
     /**************** START HELPER SECTION ***************/
-    generateArray: function(length, min, max){
-      this.generateRandomArray(length, min, max)
-      this.coloringAllBar()
+    generateArray: function (length, min, max) {
+      this.generateRandomArray(length, min, max);
+      this.coloringAllBar();
     },
     /**
      * Generate Random Integer Array
@@ -440,13 +471,24 @@ export default {
       if (number >= divider * 3 && number < this.arr.length) return LIME_COLOR;
     },
 
-    coloringAllBar: function()
-    {
-      const bar = document.getElementsByClassName("arr-bar")
-      for(let i = 0; i < bar.length; i++)
-      {
-        bar[i].style.backgroundColor = BASE_COLOR
+    coloringAllBar: function () {
+      const bar = document.getElementsByClassName("arr-bar");
+      for (let i = 0; i < bar.length; i++) {
+        bar[i].style.backgroundColor = BASE_COLOR;
       }
+    },
+
+    coloringSortedArray: function(animations) {
+      for (let i = 0; i < this.arr.length; i++) {
+        animations.push([i, this.arr[i], true, CHECKING_COLOR]);
+        if (i > 0) animations.push([i - 1, this.arr[i - 1], true, CLEARANCE_COLOR]);
+
+        if (i == this.arr.length - 1)
+          animations.push([i, this.arr[i], true, CLEARANCE_COLOR]);
+      }
+
+      for (let i = 0; i < this.arr.length; i++)
+        animations.push([i, this.arr[i], true, PRIMARY_COLOR]);
     },
     /**************** END HELPER SECTION ***************/
   },
