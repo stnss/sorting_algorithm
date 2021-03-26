@@ -1,37 +1,52 @@
 <template>
   <div class="container">
     <div class="side-bar">
-      <button v-on:click="generateRandomArray(250, 5, 600)">
+      <button v-on:click="generateArray(300, 5, 1000)">
         Generate new Array
       </button>
       <button v-on:click="bubbleSort(arr)">Bubble Sort</button>
       <button v-on:click="startMergeSort(arr)">Merge Sort</button>
+      <button v-on:click="heap(arr)">Heap Sort</button>
+      <button v-on:click="startQuickSort(arr)">Quick Sort</button>
     </div>
     <div class="content">
       <div
         class="arr-bar"
         v-for="(item, index) in arr"
         :key="index"
-        v-bind:style="{ height: (item / maxNum) * 99 + '%' }"
+        :style="{
+          height: (item / maxNum) * 95 + '%'
+        }"
       ></div>
     </div>
   </div>
 </template>
 
 <script>
+const BASE_COLOR = "whitesmoke";
 const CHECKING_COLOR = "red";
 const PRIMARY_COLOR = "turquoise";
 const CLEARANCE_COLOR = "#12f320";
+const SWAPING_COLOR = "aqua";
+const LIME_COLOR = "#c2f083";
+const BLUE_COLOR = "#82bdff";
+const PINK_COLOR = "#ff8fc8";
+const ORANGE_COLOR = "#ffc186";
+const PIVOT_COLOR = "#9400ff";
 
 export default {
   name: "Sorting",
-  created: function () {
-    this.generateRandomArray(250, 5, 600);
+  beforeMount: function() {
+    this.generateRandomArray(300, 5, 1000);
+  },
+  mounted: function () {
+    this.coloringAllBar()
   },
   data: function () {
     return {
       arr: [],
       maxNum: 0,
+      baseColor: BASE_COLOR
     };
   },
   methods: {
@@ -44,24 +59,28 @@ export default {
      */
     bubbleSort: function (arr) {
       let isSorted = false;
-      let len = this.arr.length - 1;
+      let len = arr.length - 1;
       const animations = [];
       while (!isSorted) {
         isSorted = true;
         for (let i = 0; i < len; i++) {
-          animations.push([i, i + 1, false]);
+          animations.push([i, i + 1, false, CHECKING_COLOR]);
           if (arr[i] > arr[i + 1]) {
-            animations.push([i, arr[i + 1], undefined]);
-            animations.push([i + 1, arr[i], undefined]);
+            animations.push([i, arr[i + 1], true, SWAPING_COLOR]);
+            animations.push([i + 1, arr[i], true, SWAPING_COLOR]);
             this.swap(arr, i, i + 1);
             isSorted = false;
           }
-          animations.push([i, i + 1, true]);
+          animations.push([i, i + 1, false, BASE_COLOR]);
         }
+        animations.push([len, arr[len], true, CLEARANCE_COLOR]);
+        if (len + 1 < arr.length)
+          animations.push([len + 1, arr[len + 1], true, BASE_COLOR]);
         len--;
       }
 
-      for(let i = 0; i < this.arr.length; i++) animations.push([i, this.arr[i], undefined])
+      for (let i = 0; i < this.arr.length; i++)
+        animations.push([i, this.arr[i], true, PRIMARY_COLOR]);
 
       this.animationSorting(animations);
     },
@@ -71,7 +90,6 @@ export default {
     startMergeSort: function (arr) {
       const animations = [];
       if (arr.length < 1) return;
-      const jsArr = arr.slice().sort((a, b) => a - b);
       const tempArr = arr.slice();
       this.mergeSort(arr, tempArr, 0, arr.length - 1, animations);
       this.animationSorting(animations);
@@ -122,14 +140,14 @@ export default {
       let index = startIndex;
 
       while (left <= leftEnd && right <= endIndex) {
-        animations.push([left, right, false]);
-        animations.push([left, right, true]);
+        animations.push([left, right, false, CHECKING_COLOR]);
+        animations.push([left, right, false, BASE_COLOR]);
         if (tempArr[left] <= tempArr[right]) {
-          anims.push([index, tempArr[left], undefined]);
+          anims.push([index, tempArr[left], true, SWAPING_COLOR]);
           arr[index] = tempArr[left];
           left++;
         } else {
-          anims.push([index, tempArr[right], undefined]);
+          anims.push([index, tempArr[right], true, SWAPING_COLOR]);
           arr[index] = tempArr[right];
           right++;
         }
@@ -137,18 +155,18 @@ export default {
       }
 
       while (left <= leftEnd) {
-        animations.push([left, left, false]);
-        animations.push([left, left, true]);
-        anims.push([index, tempArr[left], undefined]);
+        animations.push([left, left, false, CHECKING_COLOR]);
+        animations.push([left, left, false, BASE_COLOR]);
+        anims.push([index, tempArr[left], true, SWAPING_COLOR]);
         arr[index] = tempArr[left];
         left++;
         index++;
       }
 
       while (right <= endIndex) {
-        animations.push([right, right, false]);
-        animations.push([right, right, true]);
-        anims.push([index, tempArr[right], undefined]);
+        animations.push([right, right, false, CHECKING_COLOR]);
+        animations.push([right, right, false, BASE_COLOR]);
+        anims.push([index, tempArr[right], true, SWAPING_COLOR]);
         arr[index] = tempArr[right];
         right++;
         index++;
@@ -158,6 +176,178 @@ export default {
     },
     /**************** END MERGE SORT SECTION ***************/
 
+    /**************** START HEAP SORT SECTION ***************/
+    heap: function (arr) {
+      const animations = [];
+      this.createMaxHeap(arr, animations);
+      this.heapSort(arr, animations);
+      console.log(arr);
+      this.animationSorting(animations);
+    },
+
+    /**
+     * Main function for sorting array using Heap Sort Algorithm
+     * Swap root item with last item and heapify down last item until reach good position
+     * @param arr|Array
+     * @param animations|Array
+     */
+    heapSort: function (arr, animations) {
+      let i = arr.length - 1;
+      while (i >= 0) {
+        animations.push([i, 0, false, CHECKING_COLOR]);
+        animations.push([i, 0, false, BASE_COLOR]);
+        
+        const color = this.getColorInRange(i);
+
+        animations.push([i, arr[0], true, color]);
+        animations.push([0, arr[i], true, color]);
+        this.swap(arr, 0, i);
+        this.heapifyDown(arr, 0, animations, i);
+        i--;
+      }
+
+      for (i = 0; i < arr.length; i++) {
+        animations.push([i, arr[i], true, CHECKING_COLOR]);
+        if (i > 0) animations.push([i - 1, arr[i - 1], true, CLEARANCE_COLOR]);
+
+        if (i == arr.length - 1)
+          animations.push([i, arr[i], true, CLEARANCE_COLOR]);
+      }
+
+      for (i = 0; i < arr.length; i++)
+        animations.push([i, arr[i], true, PRIMARY_COLOR]);
+    },
+
+    /**
+     * Reorder item in heap when position was change
+     * @param arr|Array
+     * @param index|int
+     * @param animations|Array
+     * @param len|int
+     */
+    heapifyDown: function (arr, index, animations, len = null) {
+      let leftIndex = index * 2 + 1;
+      let rightIndex = index * 2 + 2;
+
+      if (len == null) len = arr.length;
+
+      while (leftIndex < len) {
+        const color = this.getColorInRange(index);
+
+        let swapIndex = leftIndex;
+        animations.push([index, swapIndex, false, CHECKING_COLOR]);
+        animations.push([index, swapIndex, false, BASE_COLOR]);
+        if (rightIndex < len && arr[rightIndex] > arr[leftIndex]) {
+          swapIndex = rightIndex;
+          animations.push([index, swapIndex, false, CHECKING_COLOR]);
+          animations.push([index, swapIndex, false, BASE_COLOR]);
+        }
+
+        const color2 = this.getColorInRange(swapIndex);
+
+        if (arr[index] > arr[swapIndex]) break;
+
+        animations.push([index, arr[swapIndex], true, color]);
+        animations.push([swapIndex, arr[index], true, color2]);
+        this.swap(arr, index, swapIndex);
+        index = swapIndex;
+        leftIndex = index * 2 + 1;
+        rightIndex = index * 2 + 2;
+      }
+    },
+
+    /**
+     * Main function for create Max Heap
+     * create max heap because we want to sort the array ASC
+     * @param arr|Array
+     * @param animations|Array
+     */
+    createMaxHeap: function (arr, animations) {
+      const middleIndex = Math.floor((arr.length - 1) / 2);
+      for (let i = middleIndex; i >= 0; i--) {
+        this.heapifyDown(arr, i, animations);
+      }
+    },
+    /**************** END HEAP SORT SECTION ***************/
+
+    /**************** START QUICK SORT SECTION ***************/
+    startQuickSort: function (arr) {
+      const animations = [];
+      this.quickSort(arr, 0, arr.length - 1, animations);
+      for (let i = 0; i < arr.length; i++) {
+        animations.push([i, arr[i], true, CHECKING_COLOR]);
+        if (i > 0) animations.push([i - 1, arr[i - 1], true, CLEARANCE_COLOR]);
+
+        if (i == arr.length - 1)
+          animations.push([i, arr[i], true, CLEARANCE_COLOR]);
+      }
+
+      for (let i = 0; i < arr.length; i++)
+        animations.push([i, arr[i], true, PRIMARY_COLOR]);
+
+      this.animationSorting(animations);
+      console.log(arr);
+    },
+
+    /**
+     * Main function Quick Sort Algortihm
+     * Choosing pivot index and split arr into left side pivot and right side pivot
+     * call recursivly until left boundary less than right boundary
+     * @param arr|Array
+     * @param left|int
+     * @param right|int
+     * @param animations|Array
+     */
+    quickSort: function (arr, left, right, animations) {
+      if (left < right) {
+        const pivot = this.partition(arr, left, right, animations);
+        this.quickSort(arr, left, pivot - 1, animations);
+        this.quickSort(arr, pivot + 1, right, animations);
+      }
+    },
+
+    /**
+     * Main function for find pivot index
+     * @param arr|Array
+     * @param left|int
+     * @param right|int
+     * @param animations|Array
+     */
+    partition: function (arr, left, right, animations) {
+      let pivot = arr[right];
+      animations.push([right, pivot, true, PIVOT_COLOR]);
+
+      let j = left - 1;
+      for (let i = left; i < right; i++) {
+        animations.push([i, right, false, CHECKING_COLOR]);
+        animations.push([i, right, false, BASE_COLOR]);
+        if (arr[i] <= pivot) {
+          j++;
+
+          animations.push([i, arr[j], true, ORANGE_COLOR]);
+          animations.push([j, arr[i], true, ORANGE_COLOR]);
+          this.swap(arr, i, j);
+        }
+      }
+
+      animations.push([j + 1, pivot, true, PIVOT_COLOR]);
+      animations.push([right, arr[j + 1], true, BASE_COLOR]);
+      this.swap(arr, j + 1, right);
+
+      for (let i = left; i < j; i++)
+        animations.push([i, arr[i], true, PINK_COLOR]);
+      for (let i = j + 2; i <= right; i++)
+        animations.push([i, arr[i], true, LIME_COLOR]);
+
+      return j + 1;
+    },
+    /**************** END QUICK SORT SECTION ***************/
+
+    /**************** START HELPER SECTION ***************/
+    generateArray: function(length, min, max){
+      this.generateRandomArray(length, min, max)
+      this.coloringAllBar()
+    },
     /**
      * Generate Random Integer Array
      * @param length|int
@@ -202,24 +392,23 @@ export default {
      * from sorting algorithm function
      * @param animations|Array
      */
-    animationSorting: function (animations) {
+    animationSorting: function (animations, duration = 5) {
       for (let i = 0; i < animations.length; i++) {
         const sortingBar = document.getElementsByClassName("arr-bar");
-        const [a, b, c] = animations[i];
-        if (c !== undefined) {
+        const [a, b, c, d] = animations[i];
+        if (!c) {
           const barAStyle = sortingBar[a].style;
           const barBStyle = sortingBar[b].style;
-          const color = !c ? CHECKING_COLOR : CLEARANCE_COLOR;
           setTimeout(() => {
-            barAStyle.backgroundColor = color;
-            barBStyle.backgroundColor = color;
-          }, i * 5);
+            barAStyle.backgroundColor = d;
+            barBStyle.backgroundColor = d;
+          }, i * duration);
         } else {
           setTimeout(() => {
             const barAStyle = sortingBar[a].style;
-            barAStyle.height = `${b}px`;
-            barAStyle.backgroundColor = PRIMARY_COLOR;
-          }, i * 5);
+            (barAStyle.height = `${(b / this.maxNum) * 95}%`),
+              (barAStyle.backgroundColor = d);
+          }, i * duration);
         }
       }
     },
@@ -239,6 +428,27 @@ export default {
       }
       return true;
     },
+
+    getColorInRange: function (number) {
+      const divider = Math.floor((this.arr.length - 1) / 4);
+      if (number >= 0 && number < divider * 1) return ORANGE_COLOR;
+
+      if (number >= divider * 1 && number < divider * 2) return BLUE_COLOR;
+
+      if (number >= divider * 2 && number < divider * 3) return PINK_COLOR;
+
+      if (number >= divider * 3 && number < this.arr.length) return LIME_COLOR;
+    },
+
+    coloringAllBar: function()
+    {
+      const bar = document.getElementsByClassName("arr-bar")
+      for(let i = 0; i < bar.length; i++)
+      {
+        bar[i].style.backgroundColor = BASE_COLOR
+      }
+    },
+    /**************** END HELPER SECTION ***************/
   },
 };
 </script>
@@ -246,6 +456,7 @@ export default {
 <style>
 .container {
   display: grid;
+  background: black;
 }
 .side-bar {
   /* width: calc(100vw - 80%); */
@@ -253,18 +464,19 @@ export default {
   height: 100%;
 }
 .content {
-  height: 95vh;
-  margin-top: 10px;
-  border: 1px solid red;
+  background: inherit;
   display: grid;
   justify-content: center;
   gap: 1px;
   grid-auto-flow: column;
+  position: absolute;
+  top: 23px;
+  bottom: 0;
+  left: 0;
+  right: 0;
 }
 .arr-bar {
-  width: 4px;
-  height: 100px;
-  background: rgb(121, 121, 121);
+  width: 3px;
   display: inline-block;
 }
 </style>
